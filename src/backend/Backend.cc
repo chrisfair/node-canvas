@@ -1,6 +1,12 @@
 #include "Backend.h"
 #include <string>
 
+
+Backend::Backend(std::string name)
+	: name(name)
+	, width(0)
+	, height(0)
+{}
 Backend::Backend(std::string name, int width, int height)
   : name(name)
   , width(width)
@@ -61,19 +67,19 @@ int Backend::getWidth()
 {
   return this->width;
 }
-void Backend::setWidth(int width_)
+void Backend::setWidth(int width)
 {
-  this->width = width_;
-  this->recreateSurface();
+	this->width = width;
+	this->recreateSurface();
 }
 
 int Backend::getHeight()
 {
   return this->height;
 }
-void Backend::setHeight(int height_)
+void Backend::setHeight(int height)
 {
-  this->height = height_;
+  this->height = height;
   this->recreateSurface();
 }
 

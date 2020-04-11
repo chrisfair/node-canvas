@@ -26,6 +26,7 @@
 #include "JPEGStream.h"
 #endif
 
+#include "backend/FBDevBackend.h"
 #include "backend/ImageBackend.h"
 #include "backend/PdfBackend.h"
 #include "backend/SvgBackend.h"
@@ -91,7 +92,7 @@ Canvas::Initialize(Nan::ADDON_REGISTER_FUNCTION_ARGS_TYPE target) {
  */
 
 NAN_METHOD(Canvas::New) {
-  if (!info.IsConstructCall()) {
+	if (!info.IsConstructCall()) {
     return Nan::ThrowTypeError("Class constructors cannot be invoked without 'new'");
   }
 
@@ -113,7 +114,8 @@ NAN_METHOD(Canvas::New) {
       backend = new ImageBackend(width, height);
   }
   else if (info[0]->IsObject()) {
-    if (Nan::New(ImageBackend::constructor)->HasInstance(info[0]) ||
+    if (Nan::New(FBDevBackend::constructor)->HasInstance(info[0]) ||
+        Nan::New(ImageBackend::constructor)->HasInstance(info[0]) ||
         Nan::New(PdfBackend::constructor)->HasInstance(info[0]) ||
         Nan::New(SvgBackend::constructor)->HasInstance(info[0])) {
       backend = Nan::ObjectWrap::Unwrap<Backend>(Nan::To<Object>(info[0]).ToLocalChecked());
@@ -507,7 +509,14 @@ NAN_METHOD(Canvas::ToBuffer) {
 
   // Async JPEG
   if (info[0]->IsFunction() && info[1]->StrictEquals(jpegStr)) {
-    JpegClosure* closure = new JpegClosure(canvas);
+    JpegClosure* closure;
+    try {
+      closure = new JpegClosure(canvas);
+    } catch (cairo_status_t ex) {
+      Nan::ThrowError(Canvas::Error(ex));
+      return;
+    }
+
     parseJPEGArgs(info[2], *closure);
 
     canvas->Ref();
@@ -779,8 +788,8 @@ Canvas::Canvas(Backend* backend) : ObjectWrap() {
 
 Canvas::~Canvas() {
   if (_backend != NULL) {
-		delete _backend;
-	}
+    delete _backend;
+  }
 }
 
 /*
